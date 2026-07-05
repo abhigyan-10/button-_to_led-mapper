@@ -42,7 +42,7 @@ void pat2()
 
 void pat3()
 {
-	volatile unsigned int i;
+	int i;
 	volatile unsigned long j;	
 	for(i = 0;i <= 4;i++)
 	{
@@ -53,47 +53,56 @@ void pat3()
 	}
 }
 
+void switch1(){
+	if(SW1 == 0)
+	{
+		delay();
+		if(SW1 == 0)
+		{
+      pat1();
+			while(SW1 == 0);
+  		delay();
+		}
+	}
+}
+
+void switch3()
+{
+	if(SW3 == 0)
+	{
+		delay();
+		if(SW3 == 0)
+		{
+      pat2();
+			while(SW3 == 0);
+			delay();
+		}
+	}
+}
+
+void switch4()
+{
+	if(SW4 == 0)
+  {
+		delay();
+  	if(SW4 == 0)
+		{
+      pat3();
+	  	while(SW4 == 0);
+			delay();
+		}
+	}
+}
+
 void main()
 {
     P2 = 0xFF;
     P1 = 0x00;
-
     while(1)
     {
-			
-        if(SW1 == 0)
-				{
-					delay();
-					if(SW1 == 0)
-					{
-            pat1();
-						while(SW1 == 0);
-						delay();
-					}
-				}
-				
-				if(SW3 == 0)
-				{
-					delay();
-					if(SW3 == 0)
-					{
-            pat2();
-						while(SW3 == 0);
-						delay();
-					}
-				}
-        
-				if(SW4 == 0)
-        {
-					delay();
-					if(SW4 == 0)
-					{
-            pat3();
-						while(SW4 == 0);
-						delay();
-					}
-				}
-        
+      switch1();
+			switch3();
+			switch4();        
     }
 }
 		
