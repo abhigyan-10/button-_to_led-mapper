@@ -1,5 +1,7 @@
 #include <REG52.H>
 
+#define pat_delay 15000UL
+
 sbit SW1 = P2^0;
 sbit SW2 = P2^1;
 sbit SW3 = P2^2;
@@ -15,6 +17,42 @@ void delay()
 	volatile unsigned int i;
 	for(i = 0; i<1000;i++);
 }
+
+void pat1()
+{
+	volatile unsigned int i;
+	volatile unsigned long j;	
+	for(i = 0;i <= 7;i++)
+	{
+		P1 = (1<<i);
+		for(j = 0; j<pat_delay;j++);
+	}
+}
+
+void pat2()
+{
+	int i;
+	volatile unsigned long j;	
+	for(i = 7;i >= 0;i--)
+	{
+		P1 = (1<<i);
+		for(j = 0; j<pat_delay;j++);
+	}
+}
+
+void pat3()
+{
+	volatile unsigned int i;
+	volatile unsigned long j;	
+	for(i = 0;i <= 4;i++)
+	{
+		P1 = 0xAA;
+		for(j = 0; j<pat_delay;j++);
+		P1 = 0x55;
+		for(j = 0; j<pat_delay;j++);
+	}
+}
+
 void main()
 {
     P2 = 0xFF;
@@ -28,7 +66,7 @@ void main()
 					delay();
 					if(SW1 == 0)
 					{
-            P1 = 0xAA;
+            pat1();
 						while(SW1 == 0);
 						delay();
 					}
@@ -39,7 +77,7 @@ void main()
 					delay();
 					if(SW3 == 0)
 					{
-            P1 = 0x55;
+            pat2();
 						while(SW3 == 0);
 						delay();
 					}
@@ -50,7 +88,7 @@ void main()
 					delay();
 					if(SW4 == 0)
 					{
-            P1 = 0x11;
+            pat3();
 						while(SW4 == 0);
 						delay();
 					}
