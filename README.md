@@ -33,3 +33,22 @@ Each push button is associated with an LED pattern using a mapping table. The fi
 3. The associated function pointer is executed.
 4. The selected LED pattern is displayed.
 5. The firmware waits until the button is released.
+
+## Challenges Faced
+- Hardware issue with one push button requiring debugging and isolation.
+- Understanding function pointers and mapping-based firmware architecture.
+- Implementing generic button handling using structures.
+
+## Learning Outcomes
+This project helped reinforce the following embedded systems concepts:
+- GPIO Programming
+- Bit Manipulation
+- Software Debouncing
+- Modular Programming
+- Structures
+- Function Pointers
+- Mapping Tables
+- Embedded Firmware Design
+- Hardware Debugging
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
