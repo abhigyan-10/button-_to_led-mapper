@@ -1,25 +1,13 @@
 #include <REG52.H>
-
 #define pat_delay 15000UL
+#define btn_num 3
 
-sbit SW1 = P2^0;
-sbit SW2 = P2^1;
-sbit SW3 = P2^2;
-sbit SW4 = P2^3;
-
-sbit LED1 = P1^0;
-sbit LED2 = P1^1;
-sbit LED3 = P1^2;
-sbit LED4 = P1^3;
-
-void delay()
-{
+void debounce_delay(){
 	volatile unsigned int i;
 	for(i = 0; i<1000;i++);
 }
 
-void pat1()
-{
+void pat1(){
 	volatile unsigned int i;
 	volatile unsigned long j;	
 	for(i = 0;i <= 7;i++)
@@ -29,8 +17,7 @@ void pat1()
 	}
 }
 
-void pat2()
-{
+void pat2(){
 	int i;
 	volatile unsigned long j;	
 	for(i = 7;i >= 0;i--)
@@ -40,8 +27,7 @@ void pat2()
 	}
 }
 
-void pat3()
-{
+void pat3(){
 	int i;
 	volatile unsigned long j;	
 	for(i = 0;i <= 4;i++)
@@ -53,56 +39,36 @@ void pat3()
 	}
 }
 
-void switch1(){
-	if(SW1 == 0)
-	{
-		delay();
-		if(SW1 == 0)
-		{
-      pat1();
-			while(SW1 == 0);
-  		delay();
-		}
-	}
-}
+typedef struct{
+	unsigned char bits;
+	void (*fp)(void);
+}ButtonMap;
 
-void switch3()
-{
-	if(SW3 == 0)
-	{
-		delay();
-		if(SW3 == 0)
-		{
-      pat2();
-			while(SW3 == 0);
-			delay();
-		}
-	}
-}
-
-void switch4()
-{
-	if(SW4 == 0)
-  {
-		delay();
-  	if(SW4 == 0)
-		{
-      pat3();
-	  	while(SW4 == 0);
-			delay();
-		}
-	}
-}
-
+ButtonMap map[] ={
+			{0 , pat1},
+			{2 , pat2},
+			{3 , pat3}
+		};
 void main()
 {
     P2 = 0xFF;
     P1 = 0x00;
-    while(1)
-    {
-      switch1();
-			switch3();
-			switch4();        
-    }
+		while(1)
+		{
+			unsigned char i;
+			for(i =0; i<btn_num;i++)
+			{
+				if((P2 & (1<<map[i].bits)) == 0)
+				{
+					debounce_delay();
+					if((P2 & (1<<map[i].bits)) == 0)
+					{
+						map[i].fp();
+						while((P2 & (1<<map[i].bits)) == 0);
+						debounce_delay();
+					}
+				}
+			}
+		}
 }
 		
