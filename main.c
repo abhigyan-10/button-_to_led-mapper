@@ -1,74 +1,105 @@
 #include <REG52.H>
-#define pat_delay 15000UL
-#define btn_num 3
 
-void debounce_delay(){
-	volatile unsigned int i;
-	for(i = 0; i<1000;i++);
-}
+/* ---------------- Configuration ---------------- */
+#define PATTERN_DELAY_COUNT   15000UL
+#define DEBOUNCE_COUNT        1000U
+#define LED_PORT              P1
+#define BTN_PORT              P2
+#define NUM_LEDS              8
+#define PAT3_REPEATS          5
+#define BTN_COUNT  			  3
 
-void pat1(){
-	volatile unsigned int i;
-	volatile unsigned long j;	
-	for(i = 0;i <= 7;i++)
-	{
-		P1 = (1<<i);
-		for(j = 0; j<pat_delay;j++);
-	}
-}
+#define BTN_PRESSED(pin)      ((BTN_PORT & (1 << (pin))) == 0)
 
-void pat2(){
-	int i;
-	volatile unsigned long j;	
-	for(i = 7;i >= 0;i--)
-	{
-		P1 = (1<<i);
-		for(j = 0; j<pat_delay;j++);
-	}
-}
-
-void pat3(){
-	int i;
-	volatile unsigned long j;	
-	for(i = 0;i <= 4;i++)
-	{
-		P1 = 0xAA;
-		for(j = 0; j<pat_delay;j++);
-		P1 = 0x55;
-		for(j = 0; j<pat_delay;j++);
-	}
-}
-
-typedef struct{
-	unsigned char bits;
-	void (*fp)(void);
-}ButtonMap;
-
-ButtonMap map[] ={
-			{0 , pat1},
-			{2 , pat2},
-			{3 , pat3}
-		};
-void main()
+/* ---------------- Delays ---------------- */
+static void debounce_delay(void)
 {
-    P2 = 0xFF;
-    P1 = 0x00;
-		while(1)
-		{
-			unsigned char i;
-			for(i =0; i<btn_num;i++)
-			{
-				if((P2 & (1<<map[i].bits)) == 0)
-				{
-					debounce_delay();
-					if((P2 & (1<<map[i].bits)) == 0)
-					{
-						map[i].fp();
-						while((P2 & (1<<map[i].bits)) == 0);
-						debounce_delay();
-					}
-				}
-			}
-		}
+    volatile unsigned int i;
+    for (i = 0; i < DEBOUNCE_COUNT; i++);
 }
-		
+
+static void pattern_delay(void)
+{
+    volatile unsigned long j;
+    for (j = 0; j < PATTERN_DELAY_COUNT; j++);
+}
+
+/* ---------------- LED patterns ---------------- */
+
+/* Single LED moving from bit 0 to bit 7 */
+static void pattern_up(void)
+{
+    unsigned char i;
+    for (i = 0; i < NUM_LEDS; i++)
+    {
+        LED_PORT = (unsigned char)(1 << i);
+        pattern_delay();
+    }
+}
+
+/* Single LED moving from bit 7 to bit 0 */
+static void pattern_down(void)
+{
+    char i;
+    for (i = NUM_LEDS - 1; i >= 0; i--)
+    {
+        LED_PORT = (unsigned char)(1 << i);
+        pattern_delay();
+    }
+}
+
+/* Alternating 0xAA / 0x55 blink */
+static void pattern_alternate(void)
+{
+    unsigned char i;
+    for (i = 0; i < PAT3_REPEATS; i++)
+    {
+        LED_PORT = 0xAA;
+        pattern_delay();
+        LED_PORT = 0x55;
+        pattern_delay();
+    }
+}
+
+/* ---------------- Button -> pattern table ---------------- */
+typedef struct {
+    unsigned char pin;          /* bit number on BTN_PORT */
+    void (*action)(void);       /* pattern to run when the btn is pressed */
+} ButtonMap;
+
+static const ButtonMap code button_map[] = {
+    { 0, pattern_up },
+    { 2, pattern_down },
+    { 3, pattern_alternate }
+};
+
+/* ---------------- Button handling ---------------- */
+static void handle_button(const ButtonMap *btn)
+{
+    if (!BTN_PRESSED(btn->pin))
+        return;
+	
+    debounce_delay();
+    if (!BTN_PRESSED(btn->pin))
+        return;
+
+    btn->action();
+
+    while (BTN_PRESSED(btn->pin));   /* wait for release */
+    debounce_delay();
+}
+
+/* ---------------- Main ---------------- */
+void main(void)
+{
+    unsigned char i;
+
+    BTN_PORT = 0xFF;    /* inputs: write 1s to P2 */
+    LED_PORT = 0x00;
+
+    while (1)
+    {
+        for (i = 0; i < BTN_COUNT; i++)
+            handle_button(&button_map[i]);
+    }
+}
