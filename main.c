@@ -26,7 +26,7 @@ static void pattern_delay(void)
 
 /* ---------------- LED patterns ---------------- */
 
-/* Single LED moving from bit 0 to bit 7 */
+/* Pattern 1: Single LED moving from bit 0 to bit 7 */
 static void pattern_up(void)
 {
     unsigned char i;
@@ -37,7 +37,7 @@ static void pattern_up(void)
     }
 }
 
-/* Single LED moving from bit 7 to bit 0 */
+/* Pattern 2: Single LED moving from bit 7 to bit 0 */
 static void pattern_down(void)
 {
     char i;
@@ -48,7 +48,7 @@ static void pattern_down(void)
     }
 }
 
-/* Alternating 0xAA / 0x55 blink */
+/* Pattern 3: Alternating 0xAA / 0x55 blink */
 static void pattern_alternate(void)
 {
     unsigned char i;
