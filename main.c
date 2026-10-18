@@ -1,8 +1,8 @@
 #include <REG52.H>
 
 /* ---------------- Configuration ---------------- */
-#define PATTERN_DELAY_COUNT   15000UL
-#define DEBOUNCE_COUNT        1000U
+#define PATTERN_DELAY_MS      250U
+#define DEBOUNCE_MS           15U
 #define LED_PORT              P1
 #define BTN_PORT              P2
 #define NUM_LEDS              8
@@ -11,17 +11,33 @@
 
 #define BTN_PRESSED(pin)      ((BTN_PORT & (1 << (pin))) == 0)
 
+/* Timer0 reload for 1 ms at 11.0592 MHz (12 clocks per machine cycle).
+   Different crystal? Reload = 65536 - (crystal_Hz / 12 / 1000) */
+#define RELOAD_H              0xFC
+#define RELOAD_L              0x66
+
 /* ---------------- Delays ---------------- */
+static void delay_ms(unsigned int ms)
+{
+    while (ms--)
+    {
+        TH0 = RELOAD_H;
+        TL0 = RELOAD_L;
+        TF0 = 0;
+        TR0 = 1;
+        while (!TF0);       /* wait ~1 ms */
+        TR0 = 0;
+    }
+}
+
 static void debounce_delay(void)
 {
-    volatile unsigned int i;
-    for (i = 0; i < DEBOUNCE_COUNT; i++);
+    delay_ms(DEBOUNCE_MS);
 }
 
 static void pattern_delay(void)
 {
-    volatile unsigned long j;
-    for (j = 0; j < PATTERN_DELAY_COUNT; j++);
+    delay_ms(PATTERN_DELAY_MS);
 }
 
 /* ---------------- LED patterns ---------------- */
@@ -96,6 +112,7 @@ void main(void)
 
     BTN_PORT = 0xFF;    /* inputs: write 1s to P2 */
     LED_PORT = 0x00;
+    TMOD = 0x01;        /* Timer0, mode 1 (16-bit) */
 
     while (1)
     {
